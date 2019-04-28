@@ -268,10 +268,130 @@ void DeleteEdge(Graph g, Edge *e)
 	}
 }
 
+// search a vertex in a graph, if exists return 1, otherwise return 0
+// use a for loop to look through all the vertice nodes, so time complexity is O(n)
+int search(Graph g, Vertex *v){
+	for(int i = 0; i < g->nV;i++){
+		if(g->vertices[i]->v->x == v->x && g->vertices[i]->v->y == v->y){
+			return 1;
+		}
+	}
+	return 0;
+}
+
+//adjacent-list based PQ
+typedef struct ADjNode
+{
+	// struct ADjNode *leftMostChild;
+	// struct ADjNode *sibling;
+	struct ADjNode *next;
+	// int key;
+	VertexNode *ID;
+}ADjNode;
+
+typedef struct ADjBasedPQ
+{
+	int size;
+	ADjNode *head;
+	ADjNode *tail;
+}ADjBasedPQ;
+
+ADjNode *newADjNode(VertexNode *vN){
+	ADjNode *new = malloc(sizeof(ADjNode));
+	assert(new!=NULL);
+	new->ID = vN;
+	new->next = NULL;
+	return new;
+}
+
+ADjBasedPQ *newADjBasedPQ(){
+	ADjBasedPQ *PQ = malloc(sizeof(ADjBasedPQ));
+	assert(PQ!=NULL);
+	PQ->size = 0;
+	PQ->head = NULL;
+	PQ->tail = NULL;
+	return PQ;
+}
+
+//insert ADj node in the end
+void Enqueue(ADjBasedPQ *PQ, VertexNode *vN){
+	ADjNode *newHN = newADjNode(vN);
+	if(PQ->head == NULL){
+		PQ->head = newHN;
+		PQ->tail = newHN;
+	}else{
+		PQ->tail->next = newHN;
+		PQ->tail = PQ->tail->next;
+	}
+	PQ->size++;
+}
+//delete in the head
+ADjNode *Dequeue(ADjBasedPQ *PQ){
+	if(PQ->head == NULL){
+		return NULL;
+	}else{
+		ADjNode *tmp = PQ->head;
+		if(tmp == PQ->tail){
+			PQ->head = NULL;
+			PQ->tail = NULL;
+		}else{
+			PQ->head = tmp->next;
+			tmp->next = NULL;
+		}
+		// printf("size %d\n",PQ->size);
+		PQ->size--;
+		return tmp;
+	}
+}
+//see if the node has been visited.
+int isVisited(ADjBasedPQ *PQ, VertexNode *vN){
+	if(PQ->size == 0){
+		return 0;
+	}
+	ADjNode *crt = PQ->head;
+	while(crt != NULL){
+		if(crt->ID->v->x == vN->v->x && crt->ID->v->y == vN->v->y){
+			return 1;
+		}
+		crt = crt->next;
+	}
+	return 0;
+}
+
 // Add the time complexity analysis of ReachableVertices() here
 void ReachableVertices(Graph g, Vertex *v)
 {
-	
+	ADjBasedPQ *queue = newADjBasedPQ();
+	ADjBasedPQ *RV = newADjBasedPQ();
+	Enqueue(queue,NewVertexNode(v));
+	while(queue->size > 0){
+		ADjNode *tmp = Dequeue(queue);
+		Enqueue(RV,tmp->ID);
+		for(int i = 0; i < g->nV; i++){
+			if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
+				VertexNode *crt = g->vertices[i];
+				if(crt->next != NULL){
+					crt = crt->next;
+					while(crt != NULL){
+						if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
+							Enqueue(queue,NewVertexNode(crt->v));
+						}
+						crt = crt->next;
+					}
+				}
+				break;
+			}
+		}
+	}
+	if(RV->size > 1){
+		ADjNode *tmp = RV->head->next;
+		printf("\n");
+		while(tmp != NULL){
+			printf("(%d,%d),",tmp->ID->v->x,tmp->ID->v->y);
+			tmp = tmp->next;
+		}
+		printf("\n");
+	}
 }
 
 // Add the time complexity analysis of ShortestPath() here
@@ -296,7 +416,7 @@ void ShowGraph(Graph g)
 		sumd = sumd + g->vertices[j]->degree;
 		j++;
 	}
-	printf("\ndeg:%d\n",sumd);
+	printf("\ndeg:%d",sumd);
 	printf("\nedge:%d\n",g->nE);
 }
 
@@ -515,14 +635,14 @@ int main() //sample main for testing
  assert(v1 != NULL);
  v2=(Vertex *) malloc(sizeof(Vertex));
  assert(v2 != NULL);
-//  v1->x=0;
-//  v1->y=0;
-//  v2->x=5;
-//  v2->y=6;
- v1->x=30;
- v1->y=10;
- v2->x=25;
- v2->y=5;
+ v1->x=0;
+ v1->y=0;
+ v2->x=5;
+ v2->y=6;
+//  v1->x=30;
+//  v1->y=10;
+//  v2->x=25;
+//  v2->y=5;
  e_ptr->p1=v1;
  e_ptr->p2=v2; 	 
  DeleteEdge(g1, e_ptr);
@@ -560,13 +680,13 @@ int main() //sample main for testing
 //  free(v1);
 //  free(v2);	
  
-//  // Find reachable vertices of (0,0)
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v1->x=0;
-//  v1->y=0;
-//  ReachableVertices(g1, v1);
-//  free(v1);
+ // Find reachable vertices of (0,0)
+ v1=(Vertex*) malloc(sizeof(Vertex));
+ assert(v1 != NULL);
+ v1->x=0;
+ v1->y=0;
+ ReachableVertices(g1, v1);
+ free(v1);
  
 //  // Find reachable vertices of (20,4)
 //  v1=(Vertex*) malloc(sizeof(Vertex));
