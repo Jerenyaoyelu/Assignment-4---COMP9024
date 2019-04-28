@@ -167,7 +167,105 @@ int InsertEdge(Graph g, Edge *e)
 // Add the time complexity analysis of DeleteEdge() here
 void DeleteEdge(Graph g, Edge *e)
 {
-	
+	//it is not an empty graph
+	if(g->nE != 0){
+		int j = 0;
+		VertexNode *crt;
+		VertexNode *prev;
+		//label to show that if links are deleted in both vertice side and also indicates the three cases below.
+		//{0,0} means the edge exists, and it has been deleted when looping through the graph
+		//{1,0}/{0,1} means the edge exists, and the link of one point side has been removed, now need to remove the link on the other point side, so it needs to keep loop through 
+		//{1,1}:
+			// if this happened after one node matched and looped through its adjacent list, then it indicates it is not an existing edge, no need to keep looking up in the array, break the outer loop
+			// if the function did not end up in the outer loop, it indicates, both vertices and edge are new, do nothing let the function finish
+		int isExisting[2] = {1,1};
+		//both vertices are existing, if this function ends in this loop
+		while(g->vertices[j] != NULL){
+			//delete link on p1 side
+			if(g->vertices[j]->v->x == e->p1->x && g->vertices[j]->v->y == e->p1->y){
+				crt = g->vertices[j];
+				prev = g->vertices[j];
+				//to see if it exists or not
+				while(crt != NULL){
+					//the edge is existing in the graph,delete it
+					if(crt->v->x == e->p2->x && crt->v->y == e->p2->y){
+						// no need to consider prev == crt, because in this ass, we dont consider self-edged.
+						if(crt->next == NULL){
+							prev->next = NULL;
+						}else{
+							prev->next = crt->next;
+							crt->next = NULL;
+						}
+						g->vertices[j]->degree--;
+						// check if this node became a isolated node
+						// if so, remove it.
+						if(g->vertices[j]->degree == 0){
+							g->vertices[j] = NULL;
+							g->nV--;
+						}
+						isExisting[0] = 0;
+						break;
+					}
+					//pause prev's move in the first loop to achieve prev one behind crt
+					if(prev != crt){
+						prev = prev->next;
+					}
+					crt = crt->next;
+				}
+				//if the function dont end up after looping through the whole adjacent list
+				//and it satifies the following, then it means either it is a new edge or has been removed from both side, so no need to keep looking up
+				//otherwise, keep looking up.
+				if(isExisting[0] == 1 && isExisting[1] == 1){
+					break;
+				}else if(isExisting[0] == 0 && isExisting[1] == 0){
+					g->nE--;
+					break;
+				}
+			}
+			//delete link on p2 side
+			if(g->vertices[j]->v->x == e->p2->x && g->vertices[j]->v->y == e->p2->y){
+				crt = g->vertices[j];
+				prev = g->vertices[j];
+				//to see if it exists or not
+				while(crt != NULL){
+					//the edge is existing in the graph,delete it
+					if(crt->v->x == e->p1->x && crt->v->y == e->p1->y){
+						// no need to consider prev == crt, because in this ass, we dont consider self-edged.
+						if(crt->next == NULL){
+							prev->next = NULL;
+						}else{
+							prev->next = crt->next;
+							crt->next = NULL;
+						}
+						g->vertices[j]->degree--;
+						// check if this node became a isolated node
+						// if so, remove it.
+						if(g->vertices[j]->degree == 0){
+							g->vertices[j] = NULL;
+							g->nV --;
+						}
+						isExisting[1] = 0;
+						break;
+					}
+					//pause prev's move in the first loop to achieve prev one behind crt
+					if(prev != crt){
+						prev = prev->next;
+					}
+					crt = crt->next;
+				}
+				//if the function dont end up after looping through the whole adjacent list
+				//and it satifies the following, then it means either it is a new edge or has been removed from both side, so no need to keep looking up
+				//otherwise, keep looking up.
+				if(isExisting[0] == 1 && isExisting[1] == 1){
+					break;
+				}else if(isExisting[0] == 0 && isExisting[1] == 0){
+					g->nE--;
+					break;
+				}
+			}
+			j++;
+		}
+	}
 }
 
 // Add the time complexity analysis of ReachableVertices() here
@@ -198,7 +296,8 @@ void ShowGraph(Graph g)
 		sumd = sumd + g->vertices[j]->degree;
 		j++;
 	}
-	printf("\n%d\n",sumd);
+	printf("\ndeg:%d\n",sumd);
+	printf("\nedge:%d\n",g->nE);
 }
 
 int main() //sample main for testing 
@@ -391,10 +490,9 @@ int main() //sample main for testing
  e_ptr->p1=v1;
  e_ptr->p2=v2;
  if (InsertEdge(g1, e_ptr)==0) printf("edge exists\n"); 
- ShowGraph(g1);
  
-//  //Display graph g1
-//  ShowGraph(g1);
+ //Display graph g1
+ ShowGraph(g1);
 	
 //  // Find the shortest path between (0,0) and (10,6) 
 //  v1=(Vertex*) malloc(sizeof(Vertex));
@@ -409,26 +507,32 @@ int main() //sample main for testing
 //  free(v1);
 //  free(v2);
 	  
-//  // Delete edge (0,0)-(5, 6)
-//  e_ptr = (Edge*) malloc(sizeof(Edge));
-//  assert(e_ptr != NULL);
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v2=(Vertex *) malloc(sizeof(Vertex));
-//  assert(v2 != NULL);
+ // Delete edge (0,0)-(5, 6)
+ //test (30,10)-(25,5)
+ e_ptr = (Edge*) malloc(sizeof(Edge));
+ assert(e_ptr != NULL);
+ v1=(Vertex*) malloc(sizeof(Vertex));
+ assert(v1 != NULL);
+ v2=(Vertex *) malloc(sizeof(Vertex));
+ assert(v2 != NULL);
 //  v1->x=0;
 //  v1->y=0;
 //  v2->x=5;
 //  v2->y=6;
-//  e_ptr->p1=v1;
-//  e_ptr->p2=v2; 	 
-//  DeleteEdge(g1, e_ptr);
-//  free(e_ptr);
-//  free(v1);
-//  free(v2);
+ v1->x=30;
+ v1->y=10;
+ v2->x=25;
+ v2->y=5;
+ e_ptr->p1=v1;
+ e_ptr->p2=v2; 	 
+ DeleteEdge(g1, e_ptr);
+ free(e_ptr);
+ free(v1);
+ free(v2);
  	 
-//  // Display graph g1
-//  ShowGraph(g1);
+ // Display graph g1
+ ShowGraph(g1);
+ 
 	
 //  // Find the shortest path between (0,0) and (10,6) 
 //  v1=(Vertex*) malloc(sizeof(Vertex));
