@@ -57,15 +57,14 @@ Graph CreateEmptyGraph()
 	// }
 	return newg;
 }
-// Add the time complexity analysis of InsertEdge() here
+// When insert an edge, this function will go through all nodes (n) in array 
+// and in every node it also will go through all edges (m) in its the adjacent list 
+// to see if the edge is existing one or not.
+// So the time complexity will be O(n*m)
 int InsertEdge(Graph g, Edge *e)
 {
-	// //create new graph nodes
-	// VertexNode *new1 = NewVertexNode(e->p1);
-	// VertexNode *new2 = NewVertexNode(e->p2);
-	// //update the degree
-	// new1->degree++;
-	// new2->degree++;
+	//only update the degree in the array
+
 	//it is an empty graph
 	if(g->nE == 0){
 		//insert the first vertexNode
@@ -73,12 +72,10 @@ int InsertEdge(Graph g, Edge *e)
 		g->vertices[0]->degree++;
 		//if use the new2 directly, it eventually will create a circle after this if statement
 		g->vertices[0]->next = NewVertexNode(e->p2);
-		g->vertices[0]->next->degree++;
 		g->vertices[1] = NewVertexNode(e->p2);
 		g->vertices[1]->degree++;
 		//if use the new1 directly, it eventually will create a circle after this if statement
 		g->vertices[1]->next = NewVertexNode(e->p1);
-		g->vertices[1]->next->degree++;
 		g->nE ++;
 		g->nV = g->nV + 2;
 		// printf("ver %d: eg %d\n",g->nV,g->nE);
@@ -113,6 +110,7 @@ int InsertEdge(Graph g, Edge *e)
 			//it is a new edge
 			//how to deal with the degree of this newnode??
 			tail->next = NewVertexNode(e->p2);
+			g->vertices[j]->degree++;
 			isExisting[0] = 1;
 		}
 		//add link on p2 side
@@ -129,6 +127,7 @@ int InsertEdge(Graph g, Edge *e)
 			}
 			//it is a new edge
 			tail->next = NewVertexNode(e->p1);
+			g->vertices[j]->degree++;
 			isExisting[1] = 1;
 			// printf("mm(%d,%d)-(%d,%d)\n",g->vertices[j]->v->x,g->vertices[j]->v->y,tail->next->v->x,tail->next->v->y);
 		}
@@ -193,11 +192,13 @@ void FreeGraph(Graph g)
 void ShowGraph(Graph g)
 {
 	int j = 0;
+	int sumd = 0;
 	while(g->vertices[j]!= NULL){
-		printf("(%d,%d)",g->vertices[j]->v->x,g->vertices[j]->v->y);
+		printf("(%d,%d) %d",g->vertices[j]->v->x,g->vertices[j]->v->y,g->vertices[j]->degree);
+		sumd = sumd + g->vertices[j]->degree;
 		j++;
 	}
-	printf("\n");
+	printf("\n%d\n",sumd);
 }
 
 int main() //sample main for testing 
