@@ -296,6 +296,7 @@ typedef struct ADjBasedPQ
 	ADjNode *tail;
 }ADjBasedPQ;
 
+//simple operations, so time complexity is O(1)
 ADjNode *newADjNode(VertexNode *vN){
 	ADjNode *new = malloc(sizeof(ADjNode));
 	assert(new!=NULL);
@@ -303,7 +304,7 @@ ADjNode *newADjNode(VertexNode *vN){
 	new->next = NULL;
 	return new;
 }
-
+//simple operations, so time complexity is O(1)
 ADjBasedPQ *newADjBasedPQ(){
 	ADjBasedPQ *PQ = malloc(sizeof(ADjBasedPQ));
 	assert(PQ!=NULL);
@@ -313,7 +314,7 @@ ADjBasedPQ *newADjBasedPQ(){
 	return PQ;
 }
 
-//insert ADj node in the end
+//insert ADj node in the end, this only requires 1 operation, so time complexity is O(1)
 void Enqueue(ADjBasedPQ *PQ, VertexNode *vN){
 	ADjNode *newHN = newADjNode(vN);
 	if(PQ->head == NULL){
@@ -325,7 +326,7 @@ void Enqueue(ADjBasedPQ *PQ, VertexNode *vN){
 	}
 	PQ->size++;
 }
-//delete in the head
+//delete in the head, this only requires 1 operation, so time complexity is O(1)
 ADjNode *Dequeue(ADjBasedPQ *PQ){
 	if(PQ->head == NULL){
 		return NULL;
@@ -344,6 +345,7 @@ ADjNode *Dequeue(ADjBasedPQ *PQ){
 	}
 }
 //see if the node has been visited.
+//use a while loop to look through all nodes and compare with vN, so time complexity is O(n) 
 int isVisited(ADjBasedPQ *PQ, VertexNode *vN){
 	if(PQ->size == 0){
 		return 0;
@@ -358,7 +360,9 @@ int isVisited(ADjBasedPQ *PQ, VertexNode *vN){
 	return 0;
 }
 
-// Add the time complexity analysis of ReachableVertices() here
+// create a PQ takes O(nlog(n)) and then use O(log(n)) time to dequeue, 
+// use O(deg(u)log(n)) to perform the reaching by each node (recall that sum(deg(u)) = 2m)
+// so, time complexity is O((m+n)log(n))
 void ReachableVertices(Graph g, Vertex *v)
 {
 	ADjBasedPQ *queue = newADjBasedPQ();
@@ -387,7 +391,11 @@ void ReachableVertices(Graph g, Vertex *v)
 		ADjNode *tmp = RV->head->next;
 		printf("\n");
 		while(tmp != NULL){
-			printf("(%d,%d),",tmp->ID->v->x,tmp->ID->v->y);
+			if(tmp->next == NULL){
+				printf("(%d,%d)",tmp->ID->v->x,tmp->ID->v->y);
+			}else{
+				printf("(%d,%d),",tmp->ID->v->x,tmp->ID->v->y);
+			}
 			tmp = tmp->next;
 		}
 		printf("\n");
@@ -403,7 +411,16 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 // Add the time complexity analysis of FreeGraph() here
 void FreeGraph(Graph g)
 {
-	
+	for(int i = 0; i< g->nV; i++){
+		VertexNode *crt = g->vertices[i];
+		while(crt != NULL){
+			VertexNode *tmp = crt;
+			crt = crt->next;
+			free(tmp);
+		}
+	}
+	free(g->vertices);
+	free(g);
 }
 
 // Add the time complexity analysis of ShowGraph() here
@@ -696,8 +713,7 @@ int main() //sample main for testing
 //  ReachableVertices(g1, v1);
 //  free(v1);
  
-//  // Free graph g1
-//  FreeGraph(g1);
- 
+ // Free graph g1
+ FreeGraph(g1);
  return 0; 
 }
