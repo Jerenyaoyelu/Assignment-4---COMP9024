@@ -426,15 +426,31 @@ void FreeGraph(Graph g)
 // Add the time complexity analysis of ShowGraph() here
 void ShowGraph(Graph g)
 {
-	int j = 0;
-	int sumd = 0;
-	while(g->vertices[j]!= NULL){
-		printf("(%d,%d) %d",g->vertices[j]->v->x,g->vertices[j]->v->y,g->vertices[j]->degree);
-		sumd = sumd + g->vertices[j]->degree;
-		j++;
+	printf("\n");
+	ADjBasedPQ *queue = newADjBasedPQ();
+	ADjBasedPQ *RV = newADjBasedPQ();
+	Enqueue(queue,NewVertexNode(g->vertices[0]->v));
+	while(queue->size > 0){
+		ADjNode *tmp = Dequeue(queue);
+		Enqueue(RV,tmp->ID);
+		for(int i = 0; i < g->nV; i++){
+			if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
+				VertexNode *crt = g->vertices[i];
+				if(crt->next != NULL){
+					crt = crt->next;
+					while(crt != NULL){
+						if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
+							//store in peers
+							Enqueue(queue,NewVertexNode(crt->v));
+							printf("(%d,%d),(%d,%d) ",tmp->ID->v->x,tmp->ID->v->y,crt->v->x,crt->v->y);
+						}
+						crt = crt->next;
+					}
+				}
+				break;
+			}
+		}
 	}
-	printf("\ndeg:%d",sumd);
-	printf("\nedge:%d\n",g->nE);
 }
 
 int main() //sample main for testing 
