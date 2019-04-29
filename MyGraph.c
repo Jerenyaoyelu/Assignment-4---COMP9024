@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include<math.h>
+#define INFINITE 2000000
 
 // A vertex is a 2D point
 typedef struct Vertex { 
@@ -16,8 +18,11 @@ typedef struct Edge {
 typedef struct VertexNode {
 	Vertex *v;
 	struct VertexNode *next;
+	//store the cloest node which leads to it, will be used in finding shortest path.
+	struct VertexNode *closest;
 	//1 means yes,0 means no.
 	int isVisited;
+	int distance;
 	// for disdinguish if it is a isolated vertex
 	int degree;
 } VertexNode;
@@ -37,6 +42,9 @@ VertexNode *NewVertexNode(Vertex *V){
 	assert(newNode!=NULL);
 	newNode->degree = 0;
 	newNode->isVisited = 0;
+	//initilize distance of each vertex, default as INFINITE
+	newNode->distance = INFINITE;
+	newNode->closest = NULL;
 	newNode->next = NULL;
 	newNode->v = (Vertex *)malloc(sizeof(Vertex));
 	assert(newNode->v !=NULL);
@@ -363,9 +371,8 @@ int isVisited(ADjBasedPQ *PQ, VertexNode *vN){
 	return 0;
 }
 
-// create a PQ takes O(nlog(n)) and then use O(log(n)) time to dequeue, 
-// use O(deg(u)log(n)) to perform the reaching by each node (recall that sum(deg(u)) = 2m)
-// so, time complexity is O((m+n)log(n))
+// create a PQ takes O(nlog(n)), use O(deg(u)log(n)) to perform the reaching each node (recall that sum(deg(u)) = 2m) 
+// and then use O(1) time to enqueue and dequeue, so, time complexity is O((m+n)log(n))
 void ReachableVertices(Graph g, Vertex *v)
 {
 	ADjBasedPQ *queue = newADjBasedPQ();
@@ -392,7 +399,6 @@ void ReachableVertices(Graph g, Vertex *v)
 	}
 	if(RV->size > 1){
 		ADjNode *tmp = RV->head->next;
-		printf("\n");
 		while(tmp != NULL){
 			if(tmp->next == NULL){
 				printf("(%d,%d)",tmp->ID->v->x,tmp->ID->v->y);
@@ -405,10 +411,130 @@ void ReachableVertices(Graph g, Vertex *v)
 	}
 }
 
+double ComputeD(VertexNode *x, VertexNode *y){
+	return sqrt(pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2));
+}
+
 // Add the time complexity analysis of ShortestPath() here
 void ShortestPath(Graph g, Vertex *u, Vertex *v)
 {
-	
+	ADjBasedPQ *Q = newADjBasedPQ();
+	//change the distance of starting vertex
+	for(int i = 0; i <g->nV;i++){
+		if(g->vertices[i]->v->x == u->x && g->vertices[i]->v->y == u->y){
+			g->vertices[i]->distance = 0;
+			Enqueue(Q,g->vertices[i]);
+			break;
+		}
+	}
+	if(Q->size > 0){
+		//create an increasing-sorted Q containing all the vertices of G using the Distance labels as keys;
+		//Q is always in an in incresed order.
+		for(int i = 0; i <g->nV;i++){
+			if(g->vertices[i]->v->x == u->x && g->vertices[i]->v->y == u->y){
+				continue;
+			}else{
+				Enqueue(Q,g->vertices[i]);
+			}
+		}
+		printf("%d\n",Q->size);
+		while(Q->size > 0){
+			ADjNode *uu = Dequeue(Q);
+			printf("%d:(%d,%d)\n",Q->size,uu->ID->v->x,uu->ID->v->y);
+			if(uu->ID->v->x == v->x && uu->ID->v->y == v->y){
+				//found the target vertex,break
+				break;
+			}
+			//there exists adjacent node
+			if(uu->ID->next != NULL){
+				//with storing the edge information,'cause I enqueue the pointer in the array of G 
+				ADjNode *crt = Q->head;
+				//used for resorting the Q after the key is changed.
+				ADjNode *prev = Q->head;
+				//here crt->ID is the potential adjacent node z, and it stores the D label value
+				//loop through the rest Q
+				while(crt != NULL){
+					printf("crt (%d,%d)\n",crt->ID->v->x,crt->ID->v->y);
+					int isCRTMoved = 0;
+					//get the adjacent nodes
+					VertexNode *tmp = uu->ID->next;
+					while(tmp!=NULL){
+						printf("TMP (%d,%d)\n",tmp->v->x,tmp->v->y);
+						//found the adjacent node z to u->ID
+						if(crt->ID->v->x == tmp->v->x && crt->ID->v->y == tmp->v->y){
+							if(uu->ID->distance + ComputeD(uu->ID,crt->ID) < crt->ID->distance){
+								//mark that crt and prev pointer of the Q will move here, so no need to move outside this loop
+								isCRTMoved = 1;
+								crt->ID->distance = uu->ID->distance + ComputeD(uu->ID,crt->ID);
+								//problem:
+								crt->ID->closest = uu->ID;
+								if(prev == crt){
+									crt = crt->next;
+								}else{
+									//Q is still in an incresing order, nothing to do
+									if(prev->ID->distance <= crt->ID->distance){
+										crt = crt->next;
+										prev = prev->next;
+									}else{
+										//Resort:
+										//if crt is the head,nothing to do
+										//otherwise, resort the Q in place
+										//delete the changed node from the Q and re-insert in right place
+										ADjNode *tmp_crt = crt;
+										prev->next = crt->next;
+										crt = crt->next;
+										tmp_crt->next = NULL;
+										ADjNode *tt = Q->head;
+										printf("new crt (%d,%d)\n",crt->ID->v->x,crt->ID->v->y);
+										while(tt != NULL){
+											if(tt == Q->head && tt->ID->distance >= tmp_crt->ID->distance){
+												Q->head = tmp_crt;
+												tmp_crt->next = tt;
+											}
+											if(tt->ID->distance <= tmp_crt->ID->distance && tt->ID->next->distance >= tmp_crt->ID->distance){
+												printf("hh\n");
+												tmp_crt->next = tt->next;
+												tt->next = tmp_crt;
+												printf("head (%d,%d)\n",Q->head->ID->v->x,Q->head->ID->v->y);
+												break;
+											}
+											tt = tt->next;
+										}
+									}
+								}
+							}
+							//found the adjacent node, but not change the distance
+							break;
+						}else{
+							//no match yet
+							tmp = tmp->next;
+						}
+					}
+					if(isCRTMoved == 0){
+						if(prev != crt){
+							prev = prev->next;
+						}
+						crt = crt->next;
+					}
+				}
+			}
+		}
+		printf("(d),\n");
+		//print the shortest path
+		//find the target vertex
+		VertexNode *target;
+		for(int i = 0; i<g->nV;i++){
+			if(g->vertices[i]->v->x == v->x && g->vertices[i]->v->y == v->y){
+				target = g->vertices[i];
+				break;
+			}
+		}
+		//print
+		while(target != NULL){
+			printf("(%d,%d),",target->v->x,target->v->y);
+			target = target->closest;
+		}
+	}
 }
 
 // Add the time complexity analysis of FreeGraph() here
@@ -667,44 +793,44 @@ int main() //sample main for testing
  //Display graph g1
  ShowGraph(g1);
 	
-//  // Find the shortest path between (0,0) and (10,6) 
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v2=(Vertex *) malloc(sizeof(Vertex));
-//  assert(v2 != NULL);
-//  v1->x=0;
-//  v1->y=0;
-//  v2->x=10;
-//  v2->y=6;
-//  ShortestPath(g1, v1, v2);
-//  free(v1);
-//  free(v2);
-	  
- // Delete edge (0,0)-(5, 6)
- //test (30,10)-(25,5)
- e_ptr = (Edge*) malloc(sizeof(Edge));
- assert(e_ptr != NULL);
+ // Find the shortest path between (0,0) and (10,6) 
  v1=(Vertex*) malloc(sizeof(Vertex));
  assert(v1 != NULL);
  v2=(Vertex *) malloc(sizeof(Vertex));
  assert(v2 != NULL);
  v1->x=0;
  v1->y=0;
- v2->x=5;
+ v2->x=10;
  v2->y=6;
-//  v1->x=30;
-//  v1->y=10;
-//  v2->x=25;
-//  v2->y=5;
- e_ptr->p1=v1;
- e_ptr->p2=v2; 	 
- DeleteEdge(g1, e_ptr);
- free(e_ptr);
+ ShortestPath(g1, v1, v2);
  free(v1);
  free(v2);
+	  
+//  // Delete edge (0,0)-(5, 6)
+//  //test (30,10)-(25,5)
+//  e_ptr = (Edge*) malloc(sizeof(Edge));
+//  assert(e_ptr != NULL);
+//  v1=(Vertex*) malloc(sizeof(Vertex));
+//  assert(v1 != NULL);
+//  v2=(Vertex *) malloc(sizeof(Vertex));
+//  assert(v2 != NULL);
+//  v1->x=0;
+//  v1->y=0;
+//  v2->x=5;
+//  v2->y=6;
+// //  v1->x=30;
+// //  v1->y=10;
+// //  v2->x=25;
+// //  v2->y=5;
+//  e_ptr->p1=v1;
+//  e_ptr->p2=v2; 	 
+//  DeleteEdge(g1, e_ptr);
+//  free(e_ptr);
+//  free(v1);
+//  free(v2);
  	 
- // Display graph g1
- ShowGraph(g1);
+//  // Display graph g1
+//  ShowGraph(g1);
  
 	
 //  // Find the shortest path between (0,0) and (10,6) 
@@ -733,13 +859,13 @@ int main() //sample main for testing
 //  free(v1);
 //  free(v2);	
  
- // Find reachable vertices of (0,0)
- v1=(Vertex*) malloc(sizeof(Vertex));
- assert(v1 != NULL);
- v1->x=0;
- v1->y=0;
- ReachableVertices(g1, v1);
- free(v1);
+//  // Find reachable vertices of (0,0)
+//  v1=(Vertex*) malloc(sizeof(Vertex));
+//  assert(v1 != NULL);
+//  v1->x=0;
+//  v1->y=0;
+//  ReachableVertices(g1, v1);
+//  free(v1);
  
 //  // Find reachable vertices of (20,4)
 //  v1=(Vertex*) malloc(sizeof(Vertex));
