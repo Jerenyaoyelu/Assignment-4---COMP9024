@@ -22,7 +22,7 @@ typedef struct VertexNode {
 	struct VertexNode *closest;
 	//1 means yes,0 means no.
 	int isVisited;
-	int distance;
+	double distance;
 	// for disdinguish if it is a isolated vertex
 	int degree;
 } VertexNode;
@@ -411,9 +411,8 @@ void ReachableVertices(Graph g, Vertex *v)
 	}
 }
 
-int ComputeD(VertexNode *x, VertexNode *y){
-	return pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2);
-	// return sqrt(pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2));
+double ComputeD(VertexNode *x, VertexNode *y){
+	return sqrt(pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2));
 }
 
 // Add the time complexity analysis of ShortestPath() here
@@ -463,8 +462,8 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 						// printf("TMP (%d,%d)\n",tmp->v->x,tmp->v->y);
 						//found the adjacent node z to u->ID
 						if(crt->ID->v->x == tmp->v->x && crt->ID->v->y == tmp->v->y){
-							// printf("%d\n",uu->ID->distance + ComputeD(uu->ID,tmp));
-							// printf("%d\n",crt->ID->distance);
+							printf("%lf\n",uu->ID->distance + ComputeD(uu->ID,tmp));
+							printf("%lf\n",crt->ID->distance);
 							if(uu->ID->distance + ComputeD(uu->ID,tmp) < crt->ID->distance){
 								//mark that crt and prev pointer of the Q will move here, so no need to move outside this loop
 								isCRTMoved = 1;
@@ -849,34 +848,34 @@ int main() //sample main for testing
  free(v2);
  
  //problem:
- // Find the shortest path between (0,0) and (25,5)
- v1=(Vertex*) malloc(sizeof(Vertex));
- assert(v1 != NULL);
- v2=(Vertex *) malloc(sizeof(Vertex));
- assert(v2 != NULL);
- v1->x=0;
- v1->y=0;
- v2->x=25;
- v2->y=5;
- ShortestPath(g1, v1, v2);
- free(v1);
- free(v2);	
+//  // Find the shortest path between (0,0) and (25,5)
+//  v1=(Vertex*) malloc(sizeof(Vertex));
+//  assert(v1 != NULL);
+//  v2=(Vertex *) malloc(sizeof(Vertex));
+//  assert(v2 != NULL);
+//  v1->x=0;
+//  v1->y=0;
+//  v2->x=25;
+//  v2->y=5;
+//  ShortestPath(g1, v1, v2);
+//  free(v1);
+//  free(v2);	
  
- // Find reachable vertices of (0,0)
- v1=(Vertex*) malloc(sizeof(Vertex));
- assert(v1 != NULL);
- v1->x=0;
- v1->y=0;
- ReachableVertices(g1, v1);
- free(v1);
+//  // Find reachable vertices of (0,0)
+//  v1=(Vertex*) malloc(sizeof(Vertex));
+//  assert(v1 != NULL);
+//  v1->x=0;
+//  v1->y=0;
+//  ReachableVertices(g1, v1);
+//  free(v1);
  
- // Find reachable vertices of (20,4)
- v1=(Vertex*) malloc(sizeof(Vertex));
- assert(v1 != NULL);
- v1->x=20;
- v1->y=4;
- ReachableVertices(g1, v1);
- free(v1);
+//  // Find reachable vertices of (20,4)
+//  v1=(Vertex*) malloc(sizeof(Vertex));
+//  assert(v1 != NULL);
+//  v1->x=20;
+//  v1->y=4;
+//  ReachableVertices(g1, v1);
+//  free(v1);
  
  // Free graph g1
  FreeGraph(g1);
