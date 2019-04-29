@@ -16,6 +16,8 @@ typedef struct Edge {
 typedef struct VertexNode {
 	Vertex *v;
 	struct VertexNode *next;
+	//1 means yes,0 means no.
+	int isVisited;
 	// for disdinguish if it is a isolated vertex
 	int degree;
 } VertexNode;
@@ -34,6 +36,7 @@ VertexNode *NewVertexNode(Vertex *V){
 	VertexNode *newNode = (VertexNode *)malloc(sizeof(VertexNode));
 	assert(newNode!=NULL);
 	newNode->degree = 0;
+	newNode->isVisited = 0;
 	newNode->next = NULL;
 	newNode->v = (Vertex *)malloc(sizeof(Vertex));
 	assert(newNode->v !=NULL);
@@ -344,7 +347,7 @@ ADjNode *Dequeue(ADjBasedPQ *PQ){
 		return tmp;
 	}
 }
-//see if the node has been visited.
+//see if the node has been visited,return 1 if yes, otherwise return 0.
 //use a while loop to look through all nodes and compare with vN, so time complexity is O(n) 
 int isVisited(ADjBasedPQ *PQ, VertexNode *vN){
 	if(PQ->size == 0){
@@ -423,18 +426,18 @@ void FreeGraph(Graph g)
 	free(g);
 }
 
-// Add the time complexity analysis of ShowGraph() here
-void ShowGraph(Graph g)
-{
-	printf("\n");
+//BFS one connected component with n1 vertices and m1 edges
+//use O(n1) to visite very node in this component and use O(deg(u1)) to visit every incident edge
+//so time complexity of BFS one connected component is O(n1+m1)
+void BFS(Graph g, VertexNode *start, ADjBasedPQ *RV){
 	ADjBasedPQ *queue = newADjBasedPQ();
-	ADjBasedPQ *RV = newADjBasedPQ();
-	Enqueue(queue,NewVertexNode(g->vertices[0]->v));
+	Enqueue(queue,NewVertexNode(start->v));
 	while(queue->size > 0){
 		ADjNode *tmp = Dequeue(queue);
 		Enqueue(RV,tmp->ID);
 		for(int i = 0; i < g->nV; i++){
 			if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
+				g->vertices[i]->isVisited = 1;
 				VertexNode *crt = g->vertices[i];
 				if(crt->next != NULL){
 					crt = crt->next;
@@ -451,6 +454,23 @@ void ShowGraph(Graph g)
 			}
 		}
 	}
+}
+
+// assume there are k components in graph g, i_th component has n(i) vertex and m(i) edges
+// use O(n(i)+m(i)) to print one compent and use O(1) to get the starting vertex of a new component
+// so the time complexity is O(n+m)
+void ShowGraph(Graph g)
+{
+	ADjBasedPQ *RV = newADjBasedPQ();
+	for(int i = 0; i <g->nV;i++){
+		if(g->vertices[i]->isVisited == 0){
+			//will only run k times if there are k components in this graph
+			BFS(g,g->vertices[i],RV);
+			//re-initialize the label so that it will not infulence future operations.
+			g->vertices[i]->isVisited = 0;
+		}
+	}
+	printf("\n");
 }
 
 int main() //sample main for testing 
