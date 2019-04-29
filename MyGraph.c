@@ -411,8 +411,9 @@ void ReachableVertices(Graph g, Vertex *v)
 	}
 }
 
-double ComputeD(VertexNode *x, VertexNode *y){
-	return sqrt(pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2));
+int ComputeD(VertexNode *x, VertexNode *y){
+	return pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2);
+	// return sqrt(pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2));
 }
 
 // Add the time complexity analysis of ShortestPath() here
@@ -437,10 +438,9 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 				Enqueue(Q,g->vertices[i]);
 			}
 		}
-		printf("%d\n",Q->size);
 		while(Q->size > 0){
 			ADjNode *uu = Dequeue(Q);
-			printf("%d:(%d,%d)\n",Q->size,uu->ID->v->x,uu->ID->v->y);
+			// printf("uu:(%d,%d)\n",uu->ID->v->x,uu->ID->v->y);
 			if(uu->ID->v->x == v->x && uu->ID->v->y == v->y){
 				//found the target vertex,break
 				break;
@@ -453,21 +453,25 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 				ADjNode *prev = Q->head;
 				//here crt->ID is the potential adjacent node z, and it stores the D label value
 				//loop through the rest Q
+				// printf("fs crt:(%d,%d)\n",crt->ID->v->x,crt->ID->v->y);
 				while(crt != NULL){
-					printf("crt (%d,%d)\n",crt->ID->v->x,crt->ID->v->y);
+					// printf("crt (%d,%d)\n",crt->ID->v->x,crt->ID->v->y);
 					int isCRTMoved = 0;
 					//get the adjacent nodes
 					VertexNode *tmp = uu->ID->next;
 					while(tmp!=NULL){
-						printf("TMP (%d,%d)\n",tmp->v->x,tmp->v->y);
+						// printf("TMP (%d,%d)\n",tmp->v->x,tmp->v->y);
 						//found the adjacent node z to u->ID
 						if(crt->ID->v->x == tmp->v->x && crt->ID->v->y == tmp->v->y){
-							if(uu->ID->distance + ComputeD(uu->ID,crt->ID) < crt->ID->distance){
+							// printf("%d\n",uu->ID->distance + ComputeD(uu->ID,tmp));
+							// printf("%d\n",crt->ID->distance);
+							if(uu->ID->distance + ComputeD(uu->ID,tmp) < crt->ID->distance){
 								//mark that crt and prev pointer of the Q will move here, so no need to move outside this loop
 								isCRTMoved = 1;
-								crt->ID->distance = uu->ID->distance + ComputeD(uu->ID,crt->ID);
+								crt->ID->distance = uu->ID->distance + ComputeD(uu->ID,tmp);
 								//problem:
 								crt->ID->closest = uu->ID;
+								// printf("CN (%d,%d)->(%d,%d)\n",uu->ID->v->x,uu->ID->v->y,tmp->v->x,tmp->v->y);
 								if(prev == crt){
 									crt = crt->next;
 								}else{
@@ -485,17 +489,15 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 										crt = crt->next;
 										tmp_crt->next = NULL;
 										ADjNode *tt = Q->head;
-										printf("new crt (%d,%d)\n",crt->ID->v->x,crt->ID->v->y);
+										// printf("new crt (%d,%d)\n",crt->ID->v->x,crt->ID->v->y);
 										while(tt != NULL){
 											if(tt == Q->head && tt->ID->distance >= tmp_crt->ID->distance){
 												Q->head = tmp_crt;
 												tmp_crt->next = tt;
 											}
 											if(tt->ID->distance <= tmp_crt->ID->distance && tt->ID->next->distance >= tmp_crt->ID->distance){
-												printf("hh\n");
 												tmp_crt->next = tt->next;
 												tt->next = tmp_crt;
-												printf("head (%d,%d)\n",Q->head->ID->v->x,Q->head->ID->v->y);
 												break;
 											}
 											tt = tt->next;
@@ -519,7 +521,6 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 				}
 			}
 		}
-		printf("(d),\n");
 		//print the shortest path
 		//find the target vertex
 		VertexNode *target;
@@ -534,6 +535,7 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 			printf("(%d,%d),",target->v->x,target->v->y);
 			target = target->closest;
 		}
+		printf("\n");
 	}
 }
 
@@ -806,74 +808,75 @@ int main() //sample main for testing
  free(v1);
  free(v2);
 	  
-//  // Delete edge (0,0)-(5, 6)
-//  //test (30,10)-(25,5)
-//  e_ptr = (Edge*) malloc(sizeof(Edge));
-//  assert(e_ptr != NULL);
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v2=(Vertex *) malloc(sizeof(Vertex));
-//  assert(v2 != NULL);
-//  v1->x=0;
-//  v1->y=0;
-//  v2->x=5;
-//  v2->y=6;
-// //  v1->x=30;
-// //  v1->y=10;
-// //  v2->x=25;
-// //  v2->y=5;
-//  e_ptr->p1=v1;
-//  e_ptr->p2=v2; 	 
-//  DeleteEdge(g1, e_ptr);
-//  free(e_ptr);
-//  free(v1);
-//  free(v2);
- 	 
-//  // Display graph g1
-//  ShowGraph(g1);
- 
-	
-//  // Find the shortest path between (0,0) and (10,6) 
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v2=(Vertex *) malloc(sizeof(Vertex));
-//  assert(v2 != NULL);
-//  v1->x=0;
-//  v1->y=0;
-//  v2->x=10;
-//  v2->y=6; 
-//  ShortestPath(g1, v1, v2);
-//  free(v1);
-//  free(v2);
- 
-//  // Find the shortest path between (0,0) and (25,5)
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v2=(Vertex *) malloc(sizeof(Vertex));
-//  assert(v2 != NULL);
-//  v1->x=0;
-//  v1->y=0;
+ // Delete edge (0,0)-(5, 6)
+ //test (30,10)-(25,5)
+ e_ptr = (Edge*) malloc(sizeof(Edge));
+ assert(e_ptr != NULL);
+ v1=(Vertex*) malloc(sizeof(Vertex));
+ assert(v1 != NULL);
+ v2=(Vertex *) malloc(sizeof(Vertex));
+ assert(v2 != NULL);
+ v1->x=0;
+ v1->y=0;
+ v2->x=5;
+ v2->y=6;
+//  v1->x=30;
+//  v1->y=10;
 //  v2->x=25;
 //  v2->y=5;
-//  ShortestPath(g1, v1, v2);
-//  free(v1);
-//  free(v2);	
+ e_ptr->p1=v1;
+ e_ptr->p2=v2; 	 
+ DeleteEdge(g1, e_ptr);
+ free(e_ptr);
+ free(v1);
+ free(v2);
+ 	 
+ // Display graph g1
+ ShowGraph(g1);
  
-//  // Find reachable vertices of (0,0)
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v1->x=0;
-//  v1->y=0;
-//  ReachableVertices(g1, v1);
-//  free(v1);
+	
+ // Find the shortest path between (0,0) and (10,6) 
+ v1=(Vertex*) malloc(sizeof(Vertex));
+ assert(v1 != NULL);
+ v2=(Vertex *) malloc(sizeof(Vertex));
+ assert(v2 != NULL);
+ v1->x=0;
+ v1->y=0;
+ v2->x=10;
+ v2->y=6; 
+ ShortestPath(g1, v1, v2);
+ free(v1);
+ free(v2);
  
-//  // Find reachable vertices of (20,4)
-//  v1=(Vertex*) malloc(sizeof(Vertex));
-//  assert(v1 != NULL);
-//  v1->x=20;
-//  v1->y=4;
-//  ReachableVertices(g1, v1);
-//  free(v1);
+ //problem:
+ // Find the shortest path between (0,0) and (25,5)
+ v1=(Vertex*) malloc(sizeof(Vertex));
+ assert(v1 != NULL);
+ v2=(Vertex *) malloc(sizeof(Vertex));
+ assert(v2 != NULL);
+ v1->x=0;
+ v1->y=0;
+ v2->x=25;
+ v2->y=5;
+ ShortestPath(g1, v1, v2);
+ free(v1);
+ free(v2);	
+ 
+ // Find reachable vertices of (0,0)
+ v1=(Vertex*) malloc(sizeof(Vertex));
+ assert(v1 != NULL);
+ v1->x=0;
+ v1->y=0;
+ ReachableVertices(g1, v1);
+ free(v1);
+ 
+ // Find reachable vertices of (20,4)
+ v1=(Vertex*) malloc(sizeof(Vertex));
+ assert(v1 != NULL);
+ v1->x=20;
+ v1->y=4;
+ ReachableVertices(g1, v1);
+ free(v1);
  
  // Free graph g1
  FreeGraph(g1);
