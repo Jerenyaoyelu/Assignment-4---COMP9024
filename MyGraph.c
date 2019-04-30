@@ -369,44 +369,44 @@ int isVisited(ADjBasedPQ *PQ, VertexNode *vN){
 	return 0;
 }
 
-// create a PQ takes O(nlog(n)), use O(deg(u)log(n)) to perform the reaching each node (recall that sum(deg(u)) = 2m) 
-// and then use O(1) time to enqueue and dequeue, so, time complexity is O((m+n)log(n))
+// create a list based PQ takes O(n), use O(deg(u)) to perform the reaching each node (recall that sum(deg(u)) = 2m) 
+// and then use O(1) time to enqueue and dequeue, so, time complexity is O(m+n)
 void ReachableVertices(Graph g, Vertex *v)
 {
 	ADjBasedPQ *queue = newADjBasedPQ();
 	ADjBasedPQ *RV = newADjBasedPQ();
-	Enqueue(queue,NewVertexNode(v));
+	for(int i = 0; i < g->nV; i++){
+		if(g->vertices[i]->v->x == v->x && g->vertices[i]->v->y == v->y){
+			Enqueue(queue,g->vertices[i]);
+			break;}
+	}
 	while(queue->size > 0){
 		ADjNode *tmp = Dequeue(queue);
 		Enqueue(RV,tmp->ID);
+		if(RV->size > 1){printf("(%d,%d),",tmp->ID->v->x,tmp->ID->v->y);}
 		for(int i = 0; i < g->nV; i++){
 			if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
 				VertexNode *crt = g->vertices[i];
 				if(crt->next != NULL){
 					crt = crt->next;
 					while(crt != NULL){
-						if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
-							Enqueue(queue,NewVertexNode(crt->v));
-						}
-						crt = crt->next;
-					}
-				}
-				break;
-			}
+						if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){Enqueue(queue,NewVertexNode(crt->v));}
+						crt = crt->next;}
+				}break;}
 		}
 	}
-	if(RV->size > 1){
-		ADjNode *tmp = RV->head->next;
-		while(tmp != NULL){
-			if(tmp->next == NULL){
-				printf("(%d,%d)",tmp->ID->v->x,tmp->ID->v->y);
-			}else{
-				printf("(%d,%d),",tmp->ID->v->x,tmp->ID->v->y);
-			}
-			tmp = tmp->next;
-		}
-		printf("\n");
-	}
+	// if(RV->size > 1){
+	// 	ADjNode *tmp = RV->head->next;
+	// 	while(tmp != NULL){
+	// 		if(tmp->next == NULL){
+	// 			printf("(%d,%d)",tmp->ID->v->x,tmp->ID->v->y);
+	// 		}else{
+	// 			printf("(%d,%d),",tmp->ID->v->x,tmp->ID->v->y);
+	// 		}
+	// 		tmp = tmp->next;
+	// 	}
+	printf("\n");
+	// }
 }
 
 // simple operations, time complexity is O(1)
@@ -572,33 +572,44 @@ void FreeGraph(Graph g)
 	free(g);
 }
 
-//BFS one connected component with n1 vertices and m1 edges
-//use O(n1) to visite very node in this component and use O(deg(u1)) to visit every incident edge
-//so time complexity of BFS one connected component is O(n1+m1)
+//BFS one connected component with n vertices and m edges
+//at each iteration use O(1) to visit a node and add it to the adjacent list based PQ and use O(deg(u1)) to visit every incident edge
+//so time complexity of BFS one connected component is O(n+m)
 void BFS(Graph g, VertexNode *start, ADjBasedPQ *RV){
 	ADjBasedPQ *queue = newADjBasedPQ();
-	Enqueue(queue,NewVertexNode(start->v));
+	Enqueue(queue,start);
+	// start->isVisited = 1;
 	while(queue->size > 0){
 		ADjNode *tmp = Dequeue(queue);
 		Enqueue(RV,tmp->ID);
-		for(int i = 0; i < g->nV; i++){
-			if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
-				g->vertices[i]->isVisited = 1;
-				VertexNode *crt = g->vertices[i];
-				if(crt->next != NULL){
-					crt = crt->next;
-					while(crt != NULL){
-						if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
-							//store in peers
-							Enqueue(queue,NewVertexNode(crt->v));
-							printf("(%d,%d),(%d,%d) ",tmp->ID->v->x,tmp->ID->v->y,crt->v->x,crt->v->y);
-						}
-						crt = crt->next;
-					}
-				}
-				break;
-			}
+		VertexNode *crt = tmp->ID;
+		if(crt->next != NULL){
+			crt = crt->next;
+			while(crt != NULL){
+				if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
+					//store in peers
+					Enqueue(queue,NewVertexNode(crt->v));
+					printf("(%d,%d),(%d,%d) ",tmp->ID->v->x,tmp->ID->v->y,crt->v->x,crt->v->y);}
+				crt = crt->next;}
 		}
+		// for(int i = 0; i < g->nV; i++){
+		// 	if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
+		// 		g->vertices[i]->isVisited = 1;
+		// 		VertexNode *crt = g->vertices[i];
+		// 		if(crt->next != NULL){
+		// 			crt = crt->next;
+		// 			while(crt != NULL){
+		// 				if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
+		// 					//store in peers
+		// 					Enqueue(queue,NewVertexNode(crt->v));
+		// 					printf("(%d,%d),(%d,%d) ",tmp->ID->v->x,tmp->ID->v->y,crt->v->x,crt->v->y);
+		// 				}
+		// 				crt = crt->next;
+		// 			}
+		// 		}
+		// 		break;
+		// 	}
+		// }
 	}
 }
 
