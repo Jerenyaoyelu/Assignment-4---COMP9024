@@ -541,7 +541,11 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 				target = target->closest;
 			}
 			for(int i = num-1; i >=0; i--){
-				printf("(%d,%d),",path[i]->v->x,path[i]->v->y);
+				if(i == 0){
+					printf("(%d,%d)",path[i]->v->x,path[i]->v->y);
+				}else{
+					printf("(%d,%d),",path[i]->v->x,path[i]->v->y);
+				}
 			}
 			printf("\n");
 		}
