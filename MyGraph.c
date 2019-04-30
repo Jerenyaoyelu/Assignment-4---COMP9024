@@ -395,18 +395,7 @@ void ReachableVertices(Graph g, Vertex *v)
 				}break;}
 		}
 	}
-	// if(RV->size > 1){
-	// 	ADjNode *tmp = RV->head->next;
-	// 	while(tmp != NULL){
-	// 		if(tmp->next == NULL){
-	// 			printf("(%d,%d)",tmp->ID->v->x,tmp->ID->v->y);
-	// 		}else{
-	// 			printf("(%d,%d),",tmp->ID->v->x,tmp->ID->v->y);
-	// 		}
-	// 		tmp = tmp->next;
-	// 	}
 	printf("\n");
-	// }
 }
 
 // simple operations, time complexity is O(1)
@@ -582,34 +571,21 @@ void BFS(Graph g, VertexNode *start, ADjBasedPQ *RV){
 	while(queue->size > 0){
 		ADjNode *tmp = Dequeue(queue);
 		Enqueue(RV,tmp->ID);
-		VertexNode *crt = tmp->ID;
-		if(crt->next != NULL){
-			crt = crt->next;
-			while(crt != NULL){
-				if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
-					//store in peers
-					Enqueue(queue,NewVertexNode(crt->v));
-					printf("(%d,%d),(%d,%d) ",tmp->ID->v->x,tmp->ID->v->y,crt->v->x,crt->v->y);}
-				crt = crt->next;}
+		for(int i = 0; i < g->nV; i++){
+			if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
+				g->vertices[i]->isVisited = 1;
+				VertexNode *crt = g->vertices[i];
+				if(crt->next != NULL){
+					crt = crt->next;
+					while(crt != NULL){
+						if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
+							//store in peers
+							Enqueue(queue,NewVertexNode(crt->v));
+							printf("(%d,%d),(%d,%d) ",tmp->ID->v->x,tmp->ID->v->y,crt->v->x,crt->v->y);}
+						crt = crt->next;}
+				}
+				break;}
 		}
-		// for(int i = 0; i < g->nV; i++){
-		// 	if(g->vertices[i]->v->x == tmp->ID->v->x && g->vertices[i]->v->y == tmp->ID->v->y){
-		// 		g->vertices[i]->isVisited = 1;
-		// 		VertexNode *crt = g->vertices[i];
-		// 		if(crt->next != NULL){
-		// 			crt = crt->next;
-		// 			while(crt != NULL){
-		// 				if(isVisited(RV,crt) == 0 && isVisited(queue,crt) == 0){
-		// 					//store in peers
-		// 					Enqueue(queue,NewVertexNode(crt->v));
-		// 					printf("(%d,%d),(%d,%d) ",tmp->ID->v->x,tmp->ID->v->y,crt->v->x,crt->v->y);
-		// 				}
-		// 				crt = crt->next;
-		// 			}
-		// 		}
-		// 		break;
-		// 	}
-		// }
 	}
 }
 
