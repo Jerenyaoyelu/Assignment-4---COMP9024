@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include<math.h>
-#define INFINITE 2000000
+#define INFINITE 2000000.00
 
 // A vertex is a 2D point
 typedef struct Vertex { 
@@ -35,8 +35,9 @@ typedef struct GraphRep { // graph header
 
 
 //The above types serve as a starting point only. You need to expand them and add more types. 
-// Watch the lecture video between 7:50pm-8:20 or so for my discussion about this assignment    
+// Watch the lecture video between 7:50pm-8:20 or so for my discussion about this assignment 
 
+// simple operations, time complexity is O(1)
 VertexNode *NewVertexNode(Vertex *V){
 	VertexNode *newNode = (VertexNode *)malloc(sizeof(VertexNode));
 	assert(newNode!=NULL);
@@ -52,8 +53,8 @@ VertexNode *NewVertexNode(Vertex *V){
 	return newNode;
 }
 
-// Add the time complexity analysis of CreateEmptyGraph() here
-//assume the miaximum size of array is 100
+// simple operations, time complexity is O(1)
+// assume the miaximum size of array is 100
 Graph CreateEmptyGraph()
 {
 	Graph newg = (GraphRep *)malloc(sizeof(GraphRep));
@@ -62,16 +63,12 @@ Graph CreateEmptyGraph()
 	assert(newg->vertices!=NULL);
 	newg->nV = 0;
 	newg->nE = 0;
-	// for(int i = 0; i< 100;i++){
-	// 	printf("(tt)\n");
-	// 	newg->vertices[i] = NULL;
-	// }
 	return newg;
 }
-// When insert an edge, this function will go through all nodes (n) in array 
-// and in every node it also will go through all edges (m) in its the adjacent list 
-// to see if the edge is existing one or not.
-// So the time complexity will be O(n*m)
+// When insert an edge, this function will go through all nodes (n) in array ,
+// and in every node it also will go through all incident edges in its the adjacent list which takes O(deg(u)) time
+// and then use simple operations (O(1)) to perform insertion
+// So the time complexity will be O(m)
 int InsertEdge(Graph g, Edge *e)
 {
 	//only update the degree in the array
@@ -175,7 +172,8 @@ int InsertEdge(Graph g, Edge *e)
 	return 1;
 }
 
-// Add the time complexity analysis of DeleteEdge() here
+// use while to loop through every vertex which takes O(n) time, and at each vertex, use O(deg(u)) to look up every edge
+// and use simple opreations to perform deletion which takes O(1), so the time complexity is O(m)
 void DeleteEdge(Graph g, Edge *e)
 {
 	//it is not an empty graph
@@ -411,11 +409,15 @@ void ReachableVertices(Graph g, Vertex *v)
 	}
 }
 
+// simple operations, time complexity is O(1)
 double ComputeD(VertexNode *x, VertexNode *y){
 	return sqrt(pow(x->v->x - y->v->x,2)+pow(x->v->y - y->v->y,2));
 }
 
-// Add the time complexity analysis of ShortestPath() here
+// Using Dijkstra’s Algorithm:
+// use O(n) time to create a adjacent list based priority queue Q, use O(nlog(n)) time to maintain the incresing order property, and use O(1) to dequeue,
+// and use O(deg(u)log(n)) to perform the finding and changing the D labels by every node,
+// so the total time complexity is O((m+n)log(n))
 void ShortestPath(Graph g, Vertex *u, Vertex *v)
 {
 	ADjBasedPQ *Q = newADjBasedPQ();
@@ -529,11 +531,17 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 				break;
 			}
 		}
-		//print
+		//reverse the order and print
 		if(target->closest != NULL){
+			VertexNode **path = (VertexNode **)malloc(100*sizeof(VertexNode *));
+			int num = 0;
 			while(target!= NULL){
-				printf("(%d,%d),",target->v->x,target->v->y);
+				path[num] = target;
+				num++;
 				target = target->closest;
+			}
+			for(int i = num-1; i >=0; i--){
+				printf("(%d,%d),",path[i]->v->x,path[i]->v->y);
 			}
 			printf("\n");
 		}
@@ -544,7 +552,8 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 	}
 }
 
-// Add the time complexity analysis of FreeGraph() here
+// use O(n) to go through every vertex and use O(deg(u)) to perform freeing the space in each vertex
+// so the time complexity is O(m)
 void FreeGraph(Graph g)
 {
 	for(int i = 0; i< g->nV; i++){
