@@ -538,6 +538,10 @@ void ShortestPath(Graph g, Vertex *u, Vertex *v)
 			printf("\n");
 		}
 	}
+	//re-initialize the distance so that it will not impact other operations.
+	for(int i = 0; i <g->nV;i++){
+		g->vertices[i]->distance = INFINITE;
+	}
 }
 
 // Add the time complexity analysis of FreeGraph() here
@@ -796,7 +800,7 @@ int main() //sample main for testing
  //Display graph g1
  ShowGraph(g1);
 	
- // Find the shortest path between (0,0) and (10,6) 
+//  Find the shortest path between (0,0) and (10,6) 
  v1=(Vertex*) malloc(sizeof(Vertex));
  assert(v1 != NULL);
  v2=(Vertex *) malloc(sizeof(Vertex));
@@ -821,10 +825,6 @@ int main() //sample main for testing
  v1->y=0;
  v2->x=5;
  v2->y=6;
-//  v1->x=30;
-//  v1->y=10;
-//  v2->x=25;
-//  v2->y=5;
  e_ptr->p1=v1;
  e_ptr->p2=v2; 	 
  DeleteEdge(g1, e_ptr);
